@@ -1,0 +1,24 @@
+{
+  "name": "castore",
+  "version": "1.0.0",
+  "description": "",
+  "main": "download.js",
+  "scripts": {
+    "checkall": "eslint test/ index.js",
+    "test": "npm run checkall && npm run mocha",
+    "mocha": "node node_modules/mocha/bin/mocha test/",
+    "cover": "nyc --reporter=lcov mocha"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "mout": "^1.1.0",
+    "nyks": "^5.6.0"
+  },
+  "devDependencies": {
+    "eslint-plugin-ivs": "^2.0.3",
+    "expect.js": "^0.3.1",
+    "mocha": "^5.2.0",
+    "nyc": "^13.0.1"
+  }
+}
