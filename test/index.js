@@ -73,7 +73,7 @@ describe("Testing downloader", function() {
     var file_url = "http://127.0.0.1:" + server_port;
     try {
       await castore(file_url, file_md5, defaulthash);
-      expect(false).to.be(true);
+      expect().to.fail("Should not reach here");
     } catch(err) {
       expect(err).to.be(`Corrupted file ${md5(data)} != ${md5(data) + '1'}`);
     }
@@ -85,19 +85,19 @@ describe("Testing downloader", function() {
     var file_url = "http://127.0.0.1:" + server_port;
     try {
       await castore();
-      expect(false).to.be(true);
+      expect().to.fail("Should not reach here");
     } catch(err) {
       expect(err).to.be(`bad arguments`);
     }
     try {
       await castore(file_url);
-      expect(false).to.be(true);
+      expect().to.fail("Should not reach here");
     } catch(err) {
       expect(err).to.be(`bad arguments`);
     }
     try {
       await castore(file_url, file_md5);
-      expect(false).to.be(true);
+      expect().to.fail("Should not reach here");
     } catch(err) {
       expect(err).to.be(`bad arguments`);
     }
@@ -111,7 +111,7 @@ describe("Testing downloader", function() {
     var file_url = "http://127.0.0.1:" + server_port + "/badfile";
     try {
       await castore(file_url, file_md5, defaulthash);
-      expect(false).to.be(true);
+      expect().to.fail("Should not reach here");
     } catch(err) {
       expect(err).to.be(`Invalid status code '500'`);
     }
