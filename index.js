@@ -1,49 +1,98 @@
 'use strict';
 
+const fs   = require('fs');
+const path = require('path');
+const send = require('send');
+const url  = require('url');
 
-const crypto  = require('crypto');
-const fs      = require('fs');
-const path    = require('path');
-
-const guid         = require('mout/random/randString');
-const pipe         = require('nyks/stream/pipe');
-const mkdirpSync   = require('nyks/fs/mkdirpSync');
-const fetch        = require('nyks/http/fetch');
+const md5  = require('nyks/crypto/md5');
 
 
-const castore = async (file_url, file_md5, storage_hash) => {
-  if(!file_url || !file_md5 || !storage_hash)
-    throw `bad arguments`;
+class Index {
 
-  var file_path = storage_hash(file_md5);
-  if(fs.existsSync(file_path))
-    return false;
-
-  mkdirpSync(path.dirname(file_path));
-  var tmp_path    = `${file_path}.tmp.${guid()}`;
-
-  try {
-    var res = await fetch(file_url);
-    if(!(res.statusCode >= 200 && res.statusCode < 300))
-      throw `Invalid status code '${res.statusCode}'`;
-
-    var outstream  = fs.createWriteStream(tmp_path);
-    var hash = crypto.createHash('md5');
-    hash.setEncoding('hex');
-
-    await Promise.all([pipe(res, hash), pipe(res, outstream)]);
-    const challenge_md5    = hash.read();
-    if(challenge_md5 != file_md5)
-      throw `Corrupted file ${challenge_md5} != ${file_md5}`;
-
-    fs.renameSync(tmp_path, file_path);
-    return true;
-  } catch(err) {
-    if(fs.existsSync(tmp_path))
-      fs.unlinkSync(tmp_path);
-    throw err;
+  constructor(store, index) {
+    this.store  = store;
+    this._index = index;
   }
-};
+
+  static suid(file_name) {
+    let file_path = file_name.replace(/\/*\?.*$/, "");// cleanup trailing slash & query string
+    file_path = file_path.replace(/^\/?\.?\//, ""); // cleanup leading '/', './', '/./'
+    file_path = file_path.replace(/\/\.\/|\/\//g, "/"); // replace '/./' by '/'
+    return md5(file_path);
+  }
+
+  get(file_name) {
+    if(!file_name)
+      throw `Invalid file name`;
+
+    let file_hash = Index.suid(file_name);
+    let file_md5  = this._index[file_hash];
+
+    if(!file_md5)
+      return {};
+    try {
+      let file_path = this.store.getFilePathFromMd5(file_md5);
+      let stat = fs.statSync(file_path);
+      return {file_md5, file_size : stat.size, file_ino : stat.ino, file_path};
+    } catch(err) {
+      return {};
+    }
+  }
+
+  checkEntry(file_name, challenge_md5) {
+    var {file_md5} = this.get(file_name);
+    if(!file_md5 && challenge_md5) {
+      let file_path = this.store.getFilePathFromMd5(challenge_md5);
+      if(fs.existsSync(file_path))
+        return this._update(file_name, challenge_md5);
+    }
+
+    if(!file_md5 || challenge_md5 && challenge_md5 != file_md5)
+      return false;
+    return true;
+  }
+
+  //remove all entries
+  reset(md5List = []) {
+    for(var file_hash in this._index) {
+      if(md5List.indexOf(this._index[file_hash]) != -1)
+        continue;
+      delete this._index[file_hash];
+    }
+    return this.store.write();
+  }
+
+  async checkFile(file_name, file_url, file_md5) {
+    if(!file_name || !file_md5 || !file_url)
+      throw `Bad arguments`;
+
+    var touched = await this.store.download(file_url, file_md5);
+    touched |= this._update(file_name, file_md5);
+    return touched;
+  }
+
+  _update(file_name, file_md5) {
+    var file_hash = Index.suid(file_name);
+    this._index[file_hash] = file_md5;
+    return this.store.write();
+  }
+
+  send(req, remote, next) {
+    var {file_md5, file_size, file_path}  = this.get(req.url);
+
+    if(!file_md5) {
+      console.log('%s missing file in index', req.url);
+      return next();
+    }
+
+    var content_type = send.mime.lookup(url.parse(req.url).pathname);
+    remote.setHeader("content-length", file_size);
+    remote.setHeader("content-type", content_type);
+    remote.setHeader("content-md5", file_md5);
+    send(req, path.resolve(file_path)).pipe(remote);
+  }
+}
 
 
-module.exports = castore;
+module.exports = Index;
