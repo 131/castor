@@ -2,7 +2,7 @@
 
 An ES7 [CAS designed](https://en.wikipedia.org/wiki/Content-addressable_storage) file storage for nodejs with a simple API and robust implementation.
 
-<img align="right" alt="castor drawing" src="/doc/castor.png">
+<img align="right" alt="castor drawing" src="https://raw.githubusercontent.com/131/castor/master/doc/castor.png"/>
 
 
 [![Build Status](https://travis-ci.org/131/castor.svg?branch=master)](https://travis-ci.org/131/castor)
