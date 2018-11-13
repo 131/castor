@@ -2,7 +2,7 @@
 
 An ES7 CAS designed file storage for nodes with a simple API and robust implementation.
 
-![castor drawing](/demo/castor.gif)
+![castor drawing](/doc/castor.png)
 
 [![Build Status](https://travis-ci.org/131/castor.svg?branch=master)](https://travis-ci.org/131/castor)
 [![Coverage Status](https://coveralls.io/repos/github/131/castor/badge.svg?branch=master)](https://coveralls.io/github/131/castor?branch=master)
@@ -42,6 +42,7 @@ index.get("some/storage/path/file.mp4")
   file_md5 : '[FULL_MD5]',
  }
 */
+```
 
 ## Index.send(req, res, next)
 ```
@@ -53,7 +54,6 @@ server.use(index.send.bind(index)) // (req, res, next)
 # Advanced usage
 
 ## Storage.warmup
-
 ```
 // move all existing (and non indexed files) files to CAS design
 await store.warmup();
