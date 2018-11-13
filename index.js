@@ -63,6 +63,11 @@ class Index {
     return this.store.write();
   }
 
+  remove(file_name) {
+    delete this._index[Index.suid(file_name)];
+    return this.store.write();
+  }
+
   async checkFile(file_name, file_url, file_md5) {
     if(!file_name || !file_md5 || !file_url)
       throw `Bad arguments`;
