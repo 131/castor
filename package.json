@@ -1,7 +1,7 @@
 {
   "name": "castor",
   "version": "1.0.3",
-  "description": "",
+  "description": "An ES7 [CAS designed](https://en.wikipedia.org/wiki/Content-addressable_storage) file storage for nodejs with a simple API and robust implementation.",
   "main": "store.js",
   "scripts": {
     "eslint": "eslint test/ store.js index.js",
@@ -11,11 +11,8 @@
     "coveralls": "npm install coveralls && node ./node_modules/coveralls/bin/coveralls.js < ./coverage/lcov.info",
     "cover": "nyc  --temp-directory=coverage/.nyc_output --reporter=text-summary --reporter=html --reporter=lcov  mocha -b"
   },
-  "author": {
-    "name": "Francois Leurent",
-    "email": "fleurent@ivsweb.com"
-  },
-  "license": "ISC",
+  "author": "Francois Leurent <fleurent@ivsweb.com>",
+  "license": "MIT",
   "dependencies": {
     "debug": "^2.2.0",
     "mout": "^1.1.0",
@@ -27,5 +24,22 @@
     "expect.js": "^0.3.1",
     "mocha": "^5.2.0",
     "nyc": "^13.0.1"
-  }
+  },
+  "directories": {
+    "doc": "doc",
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ivsgroup/castore.git"
+  },
+  "keywords": [
+    "cas",
+    "storage",
+    "md5"
+  ],
+  "bugs": {
+    "url": "https://github.com/ivsgroup/castore/issues"
+  },
+  "homepage": "https://github.com/ivsgroup/castore#readme"
 }
