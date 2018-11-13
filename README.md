@@ -1,8 +1,9 @@
 # Content addressable storage - castor
 
-An ES7 CAS designed file storage for nodes with a simple API and robust implementation.
+An ES7 [CAS designed](https://en.wikipedia.org/wiki/Content-addressable_storage) file storage for nodejs with a simple API and robust implementation.
 
-![castor drawing](/doc/castor.png)
+<img align="right" alt="castor drawing" src="/doc/castor.png">
+
 
 [![Build Status](https://travis-ci.org/131/castor.svg?branch=master)](https://travis-ci.org/131/castor)
 [![Coverage Status](https://coveralls.io/repos/github/131/castor/badge.svg?branch=master)](https://coveralls.io/github/131/castor?branch=master)
