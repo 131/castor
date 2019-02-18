@@ -84,14 +84,17 @@ class Index {
   }
 
   send(req, remote, next) {
-    var {file_md5, file_size, file_path}  = this.get(req.url);
+
+    var req_uri = decodeURIComponent(url.parse(req.url).pathname);
+
+    var {file_md5, file_size, file_path}  = this.get(req_uri);
 
     if(!file_md5) {
-      console.log('%s missing file in index', req.url);
+      console.log('%s missing file in index', req_uri);
       return next();
     }
 
-    var content_type = send.mime.lookup(url.parse(req.url).pathname);
+    var content_type = send.mime.lookup(req_uri);
     remote.setHeader("content-length", file_size);
     remote.setHeader("content-type", content_type);
     remote.setHeader("content-md5", file_md5);
