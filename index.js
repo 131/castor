@@ -73,7 +73,7 @@ class Index {
       throw `Bad arguments`;
 
     var touched = await this.store.download(file_url, file_md5);
-    touched |= this._update(file_name, file_md5);
+    touched &= this._update(file_name, file_md5);
     return touched;
   }
 
