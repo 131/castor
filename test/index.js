@@ -214,6 +214,25 @@ describe("Test Index Class", function() {
 
     });
 
+    it("should unlink file if size 0 but not in right place", async () => {
+      const file_url  = `http://127.0.0.1:${server_port}/${guid(5)}`;
+      const file_path = guid(10);
+      data = guid(400);
+      var file  = new Store(index_path);
+      const ns = guid(4);
+      var index = file.getIndex(ns);
+      var file_md5  = md5(data);
+      var touched = await index.checkFile(file_path, file_url, file_md5);
+      expect(touched).to.be(1);
+      touched = await index.checkFile(file_path, file_url, file_md5);
+      expect(touched).to.be(0);
+      const file_download_path = file.getFilePathFromMd5(file_md5);
+      fs.writeFileSync(file_download_path, '');
+      touched = await index.checkFile(file_path, file_url, file_md5);
+      expect(touched).to.be(1);
+    });
+
+
 
 
 

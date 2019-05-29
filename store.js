@@ -30,7 +30,7 @@ const log = {
   error : debug('splocalstorage:error'),
 };
 
-
+const MD5_EMPTY_FILE = 'd41d8cd98f00b204e9800998ecf8427e';
 
 class Store {
 
@@ -124,8 +124,14 @@ class Store {
   async download(file_url, file_md5) {
 
     var file_path = this.getFilePathFromMd5(file_md5);
-    if(fs.existsSync(file_path))
-      return false;
+
+    try {
+      const {size} = fs.statSync(file_path);
+      if(size == 0 && file_md5 != MD5_EMPTY_FILE)
+        fs.unlinkSync(file_path);
+      else
+        return false;
+    } catch(err) {}
 
     mkdirpSync(path.dirname(file_path));
     var tmp_path    = `${file_path}.tmp.${guid()}`;
