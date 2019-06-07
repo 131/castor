@@ -15,6 +15,7 @@ const md5File    = promisify(require('nyks/fs/md5File'));
 
 const guid         = require('mout/random/randString');
 const createWriteStream  = require('nyks/fs/createWriteStream');
+const rename       = require('nyks/fs/rename');
 const pipe         = require('nyks/stream/pipe');
 const fetch        = require('nyks/http/fetch');
 
@@ -152,7 +153,7 @@ class Store {
       if(challenge_md5 != file_md5)
         throw `Corrupted file ${challenge_md5} != ${file_md5}`;
 
-      fs.renameSync(tmp_path, file_path);
+      await rename(tmp_path, file_path);
       return true;
     } catch(err) {
       if(fs.existsSync(tmp_path))
