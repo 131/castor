@@ -14,6 +14,7 @@ const promisify  = require('nyks/function/promisify');
 const md5File    = promisify(require('nyks/fs/md5File'));
 
 const guid         = require('mout/random/randString');
+const createWriteStream  = require('nyks/fs/createWriteStream');
 const pipe         = require('nyks/stream/pipe');
 const fetch        = require('nyks/http/fetch');
 
@@ -142,7 +143,7 @@ class Store {
       if(!(res.statusCode >= 200 && res.statusCode < 300))
         throw `Invalid status code '${res.statusCode}'`;
 
-      var outstream  = fs.createWriteStream(tmp_path);
+      var outstream  = await createWriteStream(tmp_path);
       var hash = crypto.createHash('md5');
       hash.setEncoding('hex');
 
