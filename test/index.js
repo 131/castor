@@ -185,6 +185,7 @@ describe("Test Index Class", function() {
       var index = file.getIndex(ns);
       var file_md5  = md5(data);
       var touched = await index.checkFile(file_path, file_url, file_md5);
+
       expect(touched).to.be(1);
 
 
@@ -213,6 +214,25 @@ describe("Test Index Class", function() {
       expect(index.getProp("complete")).to.eql(42);
 
     });
+
+
+    //this is relevant only under win32 host
+    it("should support multi download at the same time", async () => {
+
+      const file_url  = `http://127.0.0.1:${server_port}/${guid(5)}`;
+      const file_path = guid(10);
+      data = guid(400);
+      var file  = new Store(index_path);
+      const ns = guid(4);
+      var index = file.getIndex(ns);
+      var file_md5  = md5(data);
+      var touched = await Promise.all([index.checkFile(file_path, file_url, file_md5), index.checkFile(file_path, file_url, file_md5)]);
+
+      expect(touched).to.eql([1, 1]);
+
+    });
+
+
 
     it("should unlink file if size 0 but not in right place", async () => {
       const file_url  = `http://127.0.0.1:${server_port}/${guid(5)}`;
@@ -272,7 +292,7 @@ describe("Test Index Class", function() {
     });
 
 
-    it("It should not download, alrady downloaded", async () => {
+    it("It should not download, already downloaded", async () => {
       const file_url  = `http://127.0.0.1:${server_port}/${guid(5)}`;
       const file_path = guid(10);
       data = guid(350); //change data (global !!!)
