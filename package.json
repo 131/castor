@@ -1,6 +1,6 @@
 {
   "name": "castor",
-  "version": "1.1.6",
+  "version": "1.1.7",
   "description": "An ES7 [CAS designed](https://en.wikipedia.org/wiki/Content-addressable_storage) file storage for nodejs with a simple API and robust implementation.",
   "main": "store.js",
   "scripts": {
