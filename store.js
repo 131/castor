@@ -8,7 +8,7 @@ const crypto  = require('crypto');
 const get               = require('mout/object/get');
 const set               = require('mout/object/set');
 const mkdirpSync        = require('nyks/fs/mkdirpSync');
-const writeLazySafeSync = require('nyks/fs/writeLazySafeSync');
+const writeLazySafe = require('nyks/fs/writeLazySafe');
 const eachIteratorLimit = require('nyks/async/eachIteratorLimit');
 const promisify  = require('nyks/function/promisify');
 const md5File    = promisify(require('nyks/fs/md5File'));
@@ -47,7 +47,7 @@ class Store {
     var body = {};
     const version = packages.version;
     if(!fs.existsSync(this._index_path)) {
-      this._index = {version};
+      this._index = body = {version};
       this.write();
     }
 
@@ -115,7 +115,10 @@ class Store {
   }
 
   write() {
-    return writeLazySafeSync(this._index_path, JSON.stringify(this._index));
+    return writeLazySafe(this._index_path, JSON.stringify(this._index), function(err) {
+      if(err)
+        log.error("Silent failure when writing index", err);
+    });
   }
 
   getFilePathFromMd5(file_md5) {

@@ -189,7 +189,6 @@ describe("Test Index Class", function() {
       expect(touched).to.be(1);
 
 
-
       expect(file._index).to.be.eql({
         version,
         [ns] : {

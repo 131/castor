@@ -16,7 +16,7 @@
   "dependencies": {
     "debug": "^2.2.0",
     "mout": "^1.1.0",
-    "nyks": "^5.12.4",
+    "nyks": "^5.15.2",
     "send": "^0.16.2"
   },
   "devDependencies": {
