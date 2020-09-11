@@ -14,7 +14,7 @@ const mkdirpSync   = require('nyks/fs/mkdirpSync');
 const fetch        = require('nyks/http/fetch');
 const drain        = require('nyks/stream/drain');
 const promisify    = require('nyks/function/promisify');
-const request      = promisify(require('nyks/http/request'));
+const request      = require('nyks/http/request');
 const deleteFolder = require('nyks/fs/deleteFolderRecursive');
 //const sleep        = require('nyks/async/sleep');
 
@@ -464,13 +464,9 @@ describe("Test Index Class", function() {
       var port = await defered;
       var urlpath = guid();
 
-      try {
-        await request(`http://127.0.0.1:${port}/${urlpath}`);
-        expect().to.fail("Should not reach here");
-      } catch(err) {
-        expect(err.err).to.match(/'404'/);
-        server.close();
-      }
+      let res = await request(`http://127.0.0.1:${port}/${urlpath}`);
+      expect(res.statusCode).to.eql(404);
+      server.close();
     });
   });
 
