@@ -11,7 +11,7 @@
     "coveralls": "npm install coveralls && node ./node_modules/coveralls/bin/coveralls.js < ./coverage/lcov.info",
     "cover": "nyc  --temp-directory=coverage/.nyc_output --reporter=text-summary --reporter=html --reporter=lcov  mocha -b"
   },
-  "author": "Francois Leurent <fleurent@ivsweb.com>",
+  "author": "Francois Leurent <131.code@leurent.email>",
   "license": "MIT",
   "dependencies": {
     "debug": "^2.2.0",
@@ -31,7 +31,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ivsgroup/castore.git"
+    "url": "git+https://github.com/131/castor.git"
   },
   "keywords": [
     "cas",
@@ -39,7 +39,7 @@
     "md5"
   ],
   "bugs": {
-    "url": "https://github.com/ivsgroup/castore/issues"
+    "url": "https://github.com/131/castor/issues"
   },
-  "homepage": "https://github.com/ivsgroup/castore#readme"
+  "homepage": "https://github.com/131/castor#readme"
 }

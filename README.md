@@ -5,8 +5,8 @@ An ES7 [CAS designed](https://en.wikipedia.org/wiki/Content-addressable_storage)
 <img align="right" alt="castor drawing" src="https://raw.githubusercontent.com/131/castor/master/doc/castor.png"/>
 
 
-[![Build Status](https://github.com/ivsgroup/castor/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/ivsgroup/castor/actions/workflows/test.yml)
-[![Coverage Status](https://coveralls.io/repos/github/ivsgroup/castor/badge.svg?branch=master)](https://coveralls.io/github/ivsgroup/castor?branch=master)
+[![Build Status](https://github.com/131/castor/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/131/castor/actions/workflows/test.yml)
+[![Coverage Status](https://coveralls.io/repos/github/131/castor/badge.svg?branch=master)](https://coveralls.io/github/131/castor?branch=master)
 [![NPM version](https://img.shields.io/npm/v/castor.svg)](https://www.npmjs.com/package/castor)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](http://opensource.org/licenses/MIT)
 [![Code style](https://img.shields.io/badge/code%2fstyle-ivs-green.svg)](https://www.npmjs.com/package/eslint-plugin-ivs)
