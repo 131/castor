@@ -1,4 +1,7 @@
-node_modules
-coverage
-test
-doc
+/npm-debug.log
+/node_modules
+/coverage
+/test
+/disc
+/doc
+/.github
