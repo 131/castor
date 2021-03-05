@@ -4,7 +4,7 @@
   "description": "An ES7 [CAS designed](https://en.wikipedia.org/wiki/Content-addressable_storage) file storage for nodejs with a simple API and robust implementation.",
   "main": "store.js",
   "scripts": {
-    "eslint": "eslint test/ store.js index.js",
+    "eslint": "eslint .",
     "checkall": "npm run eslint",
     "test": "npm run checkall && npm run cover",
     "mocha": "mocha -b",
@@ -16,14 +16,14 @@
   "dependencies": {
     "debug": "^2.2.0",
     "mout": "^1.1.0",
-    "nyks": "^6.0.0",
+    "nyks": "^6.1.9",
     "send": "^0.16.2"
   },
   "devDependencies": {
     "eslint-plugin-ivs": "^2.0.3",
     "expect.js": "^0.3.1",
     "mocha": "^5.2.0",
-    "nyc": "^13.0.1"
+    "nyc": "^15.1.0"
   },
   "directories": {
     "doc": "doc",

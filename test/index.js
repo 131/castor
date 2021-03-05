@@ -13,7 +13,6 @@ const defer        = require('nyks/promise/defer');
 const mkdirpSync   = require('nyks/fs/mkdirpSync');
 const fetch        = require('nyks/http/fetch');
 const drain        = require('nyks/stream/drain');
-const promisify    = require('nyks/function/promisify');
 const request      = require('nyks/http/request');
 const deleteFolder = require('nyks/fs/deleteFolderRecursive');
 //const sleep        = require('nyks/async/sleep');
