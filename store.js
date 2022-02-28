@@ -147,11 +147,14 @@ class Store {
       if(!(res.statusCode >= 200 && res.statusCode < 300))
         throw `Invalid status code '${res.statusCode}'`;
 
-      var outstream  = await createWriteStream(tmp_path);
+      const fd = fs.openSync(tmp_path, 'w+');
+      var outstream  = await createWriteStream(tmp_path, {fd});
       var hash = crypto.createHash('md5');
       hash.setEncoding('hex');
 
       await Promise.all([pipe(res, hash), pipe(res, outstream)]);
+      await new Promise(resolve => fs.fsync(fd, resolve));
+
       const challenge_md5    = hash.read();
       if(challenge_md5 != file_md5)
         throw `Corrupted file ${challenge_md5} != ${file_md5}`;
