@@ -1,9 +1,9 @@
 'use strict';
 
-const path = require('path');
-const fs   = require('fs');
-const crypto  = require('crypto');
-
+const crypto = require('crypto');
+const fs     = require('fs');
+const path   = require('path');
+const url    = require('url');
 
 const get               = require('mout/object/get');
 const set               = require('mout/object/set');
@@ -17,7 +17,8 @@ const guid         = require('mout/random/randString');
 const createWriteStream  = require('nyks/fs/createWriteStream');
 const rename       = require('nyks/fs/rename');
 const pipe         = require('nyks/stream/pipe');
-const fetch        = require('nyks/http/fetch');
+const request      = require('nyks/http/request');
+const defer        = require('nyks/promise/defer');
 
 
 const readdir    = require('nyks/fs/readdir');
@@ -127,7 +128,6 @@ class Store {
 
 
   async download(file_url, file_md5) {
-
     var file_path = this.getFilePathFromMd5(file_md5);
 
     try {
@@ -139,32 +139,60 @@ class Store {
     } catch(err) {}
 
     mkdirpSync(path.dirname(file_path));
-    var tmp_path    = `${file_path}.tmp.${guid()}`;
 
-    try {
-      var res = await fetch(file_url);
+    var tmp_path     = `${file_path}.tmp.${guid()}`;
+    var current_size = 0;
+    var hash         = crypto.createHash('md5');
 
-      if(!(res.statusCode >= 200 && res.statusCode < 300))
-        throw `Invalid status code '${res.statusCode}'`;
+    hash.setEncoding('hex');
 
-      const fd = fs.openSync(tmp_path, 'w+');
-      var outstream  = await createWriteStream(tmp_path, {fd});
-      var hash = crypto.createHash('md5');
-      hash.setEncoding('hex');
+    while(true) {
+      try {
+        file_url = url.parse(file_url);
+        file_url.headers = {
+          'Range' : `bytes=${current_size}-`
+        };
 
-      await Promise.all([pipe(res, hash), pipe(res, outstream)]);
-      await new Promise(resolve => fs.fsync(fd, resolve));
+        var res           = await request(file_url);
+        var expected_size = res.headers['content-length'];
+        var acceptRange   = !!res.headers['accept-ranges']; // Accept-Ranges: bytes ?
 
-      const challenge_md5    = hash.read();
-      if(challenge_md5 != file_md5)
-        throw `Corrupted file ${challenge_md5} != ${file_md5}`;
+        var defered = defer();
+        res.on('end', defered.resolve);
 
-      await rename(tmp_path, file_path);
-      return true;
-    } catch(err) {
-      if(fs.existsSync(tmp_path))
-        fs.unlinkSync(tmp_path);
-      throw err;
+        if(!(res.statusCode >= 200 && res.statusCode < 300))
+          throw `Invalid status code '${res.statusCode}'`;
+
+        const fd      = fs.openSync(tmp_path, 'a+');
+        var outstream = await createWriteStream(tmp_path, {fd});
+
+        pipe(res, hash, {end : false});
+        await pipe(res, outstream);
+
+        await new Promise(resolve => fs.fsync(fd, resolve));
+
+        let {size} = fs.statSync(tmp_path);
+
+        current_size = size;
+
+        if(!acceptRange || current_size >= expected_size) {
+          await defered;
+          hash.end();
+
+          const challenge_md5 = hash.read();
+
+          if(challenge_md5 != file_md5)
+            throw `Corrupted file ${challenge_md5} != ${file_md5}`;
+
+          await rename(tmp_path, file_path);
+          return true;
+        }
+
+      } catch(err) {
+        if(fs.existsSync(tmp_path))
+          fs.unlinkSync(tmp_path);
+        throw err;
+      }
     }
   }
 
