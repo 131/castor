@@ -486,6 +486,7 @@ describe("Test Index Class", function() {
 
         res.setHeader("content-length", file_size); // keep real content-length here
         res.setHeader("content-md5", file_md5); // why not
+        res.setHeader("accept-ranges", "bytes");
 
         let [, , range] = new RegExp('^([a-zA-Z]+)=([0-9]+)-').exec(req.headers.range || 'bytes=5-');
 
@@ -504,7 +505,7 @@ describe("Test Index Class", function() {
       var file      = new Store(index_path);
       var ns        = guid(4);
       var index     = file.getIndex(ns);
-      var touched   = await index.checkFile(file_path, target, file_md5);
+      var touched   = await index.checkFile(file_path, target, file_md5, true);
 
       fs.unlinkSync(file_path);
 

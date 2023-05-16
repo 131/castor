@@ -68,11 +68,11 @@ class Index {
     return this.store.write();
   }
 
-  async checkFile(file_name, file_url, file_md5) {
+  async checkFile(file_name, file_url, file_md5, allowResume) {
     if(!file_name || !file_md5 || !file_url)
       throw `Bad arguments`;
 
-    var touched = await this.store.download(file_url, file_md5);
+    var touched = await this.store.download(file_url, file_md5, allowResume);
     touched |= this._update(file_name, file_md5);
     return touched;
   }
@@ -84,7 +84,6 @@ class Index {
   }
 
   send(req, remote, next) {
-
     var req_uri = decodeURIComponent(url.parse(req.url).pathname);
 
     var {file_md5, file_size, file_path}  = this.get(req_uri);

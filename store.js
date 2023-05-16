@@ -17,9 +17,8 @@ const guid         = require('mout/random/randString');
 const createWriteStream  = require('nyks/fs/createWriteStream');
 const rename       = require('nyks/fs/rename');
 const pipe         = require('nyks/stream/pipe');
+const fetch        = require('nyks/http/fetch');
 const request      = require('nyks/http/request');
-const defer        = require('nyks/promise/defer');
-
 
 const readdir    = require('nyks/fs/readdir');
 const debug      = require('debug');
@@ -127,7 +126,7 @@ class Store {
   }
 
 
-  async download(file_url, file_md5) {
+  async download(file_url, file_md5, allowResume) {
     var file_path = this.getFilePathFromMd5(file_md5);
 
     try {
@@ -146,20 +145,15 @@ class Store {
 
     hash.setEncoding('hex');
 
-    while(true) {
-      try {
-        file_url = url.parse(file_url);
-        file_url.headers = {
-          'Range' : `bytes=${current_size}-`
-        };
+    try {
+      var res           = await fetch(file_url);
+      var expected_size = parseInt(res.headers['content-length']);
+      var acceptRange   = !!res.headers['accept-ranges'];
 
-        var res           = await request(file_url);
-        var expected_size = res.headers['content-length'];
-        var acceptRange   = !!res.headers['accept-ranges']; // Accept-Ranges: bytes ?
+      allowResume &= acceptRange;
+      file_url     = url.parse(file_url);
 
-        var defered = defer();
-        res.on('end', defered.resolve);
-
+      do {
         if(!(res.statusCode >= 200 && res.statusCode < 300))
           throw `Invalid status code '${res.statusCode}'`;
 
@@ -168,32 +162,38 @@ class Store {
 
         pipe(res, hash, {end : false});
         await pipe(res, outstream);
-
         await new Promise(resolve => fs.fsync(fd, resolve));
+
+        if(!allowResume)
+          break;
 
         let {size} = fs.statSync(tmp_path);
 
-        current_size = size;
+        current_size     = size;
+        file_url.headers = {
+          'Range' : `bytes=${current_size}-`
+        };
 
-        if(!acceptRange || current_size >= expected_size) {
-          await defered;
-          hash.end();
+        res = await request(file_url);
+        console.log({expected_size, current_size});
+      } while(current_size < expected_size);
 
-          const challenge_md5 = hash.read();
+      hash.end();
 
-          if(challenge_md5 != file_md5)
-            throw `Corrupted file ${challenge_md5} != ${file_md5}`;
+      const challenge_md5 = hash.read();
+      console.log({challenge_md5, file_md5});
 
-          await rename(tmp_path, file_path);
-          return true;
-        }
+      if(challenge_md5 != file_md5)
+        throw `Corrupted file ${challenge_md5} != ${file_md5}`;
 
-      } catch(err) {
-        if(fs.existsSync(tmp_path))
-          fs.unlinkSync(tmp_path);
-        throw err;
-      }
+      await rename(tmp_path, file_path);
+      return true;
+    } catch(err) {
+      if(fs.existsSync(tmp_path))
+        fs.unlinkSync(tmp_path);
+      throw err;
     }
+
   }
 
 }
