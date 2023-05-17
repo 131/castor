@@ -468,7 +468,6 @@ describe("Test Index Class", function() {
       server.close();
     });
 
-
     it("try to get file from partial request", async () => {
       data            = guid(40);//global
 
@@ -488,10 +487,15 @@ describe("Test Index Class", function() {
         res.setHeader("content-md5", file_md5); // why not
         res.setHeader("accept-ranges", "bytes");
 
-        let [, , range] = new RegExp('^([a-zA-Z]+)=([0-9]+)-').exec(req.headers.range || 'bytes=5-');
+
+        let length = 5;
+        let [, , range] = new RegExp('^([a-zA-Z]+)=([0-9]+)-').exec(req.headers.range || `bytes=0-`);
 
         range = parseInt(range);
-        res.end(Buffer.from(data_bytes.slice(range, range + 5))); // only send 5 bytes at a time
+        let payload = Buffer.from(data_bytes.slice(range, range + length));
+        console.log("Sending %d bytes [%d-%d]", payload.length, range, length, payload);
+
+        res.end(payload); // only send 5 bytes at a time
       });
 
       server.listen(0, function() {

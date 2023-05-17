@@ -125,7 +125,6 @@ class Store {
     return path.join(this._storage_path, file_md5.substr(0, 2), file_md5.substr(2, 1), file_md5);
   }
 
-
   async download(file_url, file_md5, allowResume) {
     var file_path = this.getFilePathFromMd5(file_md5);
 
@@ -161,6 +160,7 @@ class Store {
         var outstream = await createWriteStream(tmp_path, {fd});
 
         pipe(res, hash, {end : false});
+
         await pipe(res, outstream);
         await new Promise(resolve => fs.fsync(fd, resolve));
 
@@ -175,18 +175,17 @@ class Store {
         };
 
         res = await request(file_url);
-        console.log({expected_size, current_size});
       } while(current_size < expected_size);
 
       hash.end();
 
       const challenge_md5 = hash.read();
-      console.log({challenge_md5, file_md5});
 
       if(challenge_md5 != file_md5)
         throw `Corrupted file ${challenge_md5} != ${file_md5}`;
 
       await rename(tmp_path, file_path);
+
       return true;
     } catch(err) {
       if(fs.existsSync(tmp_path))
