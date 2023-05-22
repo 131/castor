@@ -149,8 +149,9 @@ class Store {
       var expected_size = parseInt(res.headers['content-length']);
       var acceptRange   = !!res.headers['accept-ranges'];
 
-      allowResume &= acceptRange;
-      file_url     = url.parse(file_url);
+      allowResume      &= acceptRange;
+      file_url         = url.parse(file_url);
+      file_url.headers = {...file_url.headers};
 
       do {
         if(!(res.statusCode >= 200 && res.statusCode < 300))
@@ -164,18 +165,20 @@ class Store {
         await pipe(res, outstream);
         await new Promise(resolve => fs.fsync(fd, resolve));
 
-        if(!allowResume)
-          break;
 
         let {size} = fs.statSync(tmp_path);
 
-        current_size     = size;
-        file_url.headers = {
-          'Range' : `bytes=${current_size}-`
-        };
+        allowResume  &= size != current_size;
+        current_size = size;
 
-        res = await request(file_url);
-      } while(current_size < expected_size);
+        if(current_size == expected_size || !allowResume)
+          break;
+
+        file_url.headers['Range'] = `bytes=${current_size}-`;
+
+        res         = await request(file_url);
+        allowResume &= current_size < expected_size;
+      } while(allowResume);
 
       hash.end();
 
