@@ -154,15 +154,23 @@ class Store {
       allowResume      &= !!res.headers['accept-ranges'];
 
       do {
+
         if(!(res.statusCode >= 200 && res.statusCode < 300))
           throw `Invalid status code '${res.statusCode}'`;
 
         const fd      = fs.openSync(tmp_path, 'a+');
         var outstream = await createWriteStream(tmp_path, {fd});
 
-        pipe(res, hash, {end : false});
 
-        await pipe(res, outstream);
+        pipe(res, hash, {end : false}).catch(() => false);
+
+        try {
+          await pipe(res, outstream);
+        } catch(err) {
+          if(err.code != 'ECONNRESET' || !allowResume)
+            throw err;
+        }
+
         await new Promise(resolve => fs.fsync(fd, resolve));
 
 
@@ -177,6 +185,7 @@ class Store {
         file_url.headers['Range'] = `bytes=${current_size}-`;
 
         res         = await request(file_url);
+
         allowResume &= current_size < expected_size;
       } while(allowResume);
 

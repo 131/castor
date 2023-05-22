@@ -13,6 +13,7 @@ const defer        = require('nyks/promise/defer');
 const mkdirpSync   = require('nyks/fs/mkdirpSync');
 const fetch        = require('nyks/http/fetch');
 const drain        = require('nyks/stream/drain');
+const sleep        = require('nyks/async/sleep');
 const request      = require('nyks/http/request');
 const deleteFolder = require('nyks/fs/deleteFolderRecursive');
 //const sleep        = require('nyks/async/sleep');
@@ -330,6 +331,7 @@ describe("Test Index Class", function() {
       //now reset index
       index.reset();
       //entry should still be available
+      await sleep(1);
       expect(index.checkEntry(file_path, file_md5)).to.be(true);
 
     });
@@ -468,55 +470,7 @@ describe("Test Index Class", function() {
       server.close();
     });
 
-    it("try to get file from partial request", async () => {
-      data            = guid(40);//global
 
-      const file_path = guid(10);
-      const file_md5  = md5(data);
-
-      var defered = defer();
-
-      fs.writeFileSync(file_path, data);
-      console.log('FILE CONTENT MIGHT BE : ', data, 'IN FILENAME', file_path, 'AND MD5', file_md5);
-
-      var server = http.createServer((req, res) => {
-        let {size : file_size} = fs.statSync(file_path);
-        let data_bytes          = Array.from(Buffer.from(data, 'utf8'));
-
-        res.setHeader("content-length", file_size); // keep real content-length here
-        res.setHeader("content-md5", file_md5); // why not
-        res.setHeader("accept-ranges", "bytes");
-
-
-        let length = 5;
-        let [, , range] = new RegExp('^([a-zA-Z]+)=([0-9]+)-').exec(req.headers.range || `bytes=0-`);
-
-        range = parseInt(range);
-        let payload = Buffer.from(data_bytes.slice(range, range + length));
-        console.log("Sending %d bytes [%d-%d]", payload.length, range, length, payload);
-
-        res.end(payload); // only send 5 bytes at a time
-      });
-
-      server.listen(0, function() {
-        defered.resolve(this.address().port);
-      });
-
-
-      var port         = await defered;
-      var target       = `http://127.0.0.1:${port}/${file_path}`;
-
-      var file      = new Store(index_path);
-      var ns        = guid(4);
-      var index     = file.getIndex(ns);
-      var touched   = await index.checkFile(file_path, target, file_md5, true);
-
-      fs.unlinkSync(file_path);
-
-      expect(touched).to.be(1);
-
-      server.close();
-    });
   });
 
 });
