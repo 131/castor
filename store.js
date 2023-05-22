@@ -144,12 +144,14 @@ class Store {
     hash.setEncoding('hex');
 
     try {
+      file_url                = url.parse(file_url);
+      file_url.headers        = {...file_url.headers};
+      file_url.followRedirect = true;
+
       var res           = await request(file_url);
       var expected_size = parseInt(res.headers['content-length']);
 
       allowResume      &= !!res.headers['accept-ranges'];
-      file_url         = url.parse(file_url);
-      file_url.headers = {...file_url.headers};
 
       do {
         if(!(res.statusCode >= 200 && res.statusCode < 300))
