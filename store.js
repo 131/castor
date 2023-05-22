@@ -147,9 +147,8 @@ class Store {
     try {
       var res           = await fetch(file_url);
       var expected_size = parseInt(res.headers['content-length']);
-      var acceptRange   = !!res.headers['accept-ranges'];
 
-      allowResume      &= acceptRange;
+      allowResume      &= !!res.headers['accept-ranges'];
       file_url         = url.parse(file_url);
       file_url.headers = {...file_url.headers};
 
