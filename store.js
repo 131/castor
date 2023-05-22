@@ -17,7 +17,6 @@ const guid         = require('mout/random/randString');
 const createWriteStream  = require('nyks/fs/createWriteStream');
 const rename       = require('nyks/fs/rename');
 const pipe         = require('nyks/stream/pipe');
-const fetch        = require('nyks/http/fetch');
 const request      = require('nyks/http/request');
 
 const readdir    = require('nyks/fs/readdir');
@@ -145,7 +144,7 @@ class Store {
     hash.setEncoding('hex');
 
     try {
-      var res           = await fetch(file_url);
+      var res           = await request(file_url);
       var expected_size = parseInt(res.headers['content-length']);
 
       allowResume      &= !!res.headers['accept-ranges'];
