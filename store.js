@@ -144,7 +144,9 @@ class Store {
     hash.setEncoding('hex');
 
     try {
-      file_url                = url.parse(file_url);
+      if(typeof file_url == 'string')
+        file_url = url.parse(file_url);
+
       file_url.headers        = {...file_url.headers};
       file_url.followRedirect = true;
 
