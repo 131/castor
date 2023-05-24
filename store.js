@@ -137,10 +137,20 @@ class Store {
     mkdirpSync(path.dirname(file_path));
 
     var tmp_path     = `${file_path}.tmp`;
-    var current_size = fs.existsSync(tmp_path) ? fs.statSync(tmp_path).size : 0;
+    var current_size = 0;
     var hash         = crypto.createHash('md5');
 
     hash.setEncoding('hex');
+
+    if(fs.existsSync(tmp_path)) {
+      if(allowResume) {
+        current_size = fs.statSync(tmp_path).size;
+
+        await pipe(fs.createReadStream(tmp_path), hash);
+      } else {
+        fs.unlinkSync(file_path)
+      }
+    }
 
     try {
       if(typeof file_url == 'string')
