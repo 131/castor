@@ -13,7 +13,6 @@ const eachIteratorLimit = require('nyks/async/eachIteratorLimit');
 const promisify  = require('nyks/function/promisify');
 const md5File    = promisify(require('nyks/fs/md5File'));
 
-const guid         = require('mout/random/randString');
 const createWriteStream  = require('nyks/fs/createWriteStream');
 const rename       = require('nyks/fs/rename');
 const pipe         = require('nyks/stream/pipe');
@@ -137,8 +136,8 @@ class Store {
 
     mkdirpSync(path.dirname(file_path));
 
-    var tmp_path     = `${file_path}.tmp.${guid()}`;
-    var current_size = 0;
+    var tmp_path     = `${file_path}.tmp`;
+    var current_size = fs.existsSync(tmp_path) ? fs.statSync(tmp_path).size : 0;
     var hash         = crypto.createHash('md5');
 
     hash.setEncoding('hex');
