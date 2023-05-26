@@ -2,6 +2,8 @@
 
 const crypto = require('crypto');
 const fs     = require('fs');
+const http   = require('http');
+const os     = require('os');
 const path   = require('path');
 const url    = require('url');
 
@@ -10,6 +12,7 @@ const set               = require('mout/object/set');
 const mkdirpSync        = require('nyks/fs/mkdirpSync');
 const writeLazySafe = require('nyks/fs/writeLazySafe');
 const eachIteratorLimit = require('nyks/async/eachIteratorLimit');
+const retryUntil = require('nyks/async/retryUntil');
 const promisify  = require('nyks/function/promisify');
 const md5File    = promisify(require('nyks/fs/md5File'));
 
@@ -19,6 +22,7 @@ const pipe         = require('nyks/stream/pipe');
 const request      = require('nyks/http/request');
 
 const readdir    = require('nyks/fs/readdir');
+
 const debug      = require('debug');
 const Index = require('./index');
 
@@ -123,15 +127,47 @@ class Store {
     return path.join(this._storage_path, file_md5.substr(0, 2), file_md5.substr(2, 1), file_md5);
   }
 
+  async isWritable(socket_name) {
+    let server = await retryUntil(() => {
+      const pipeDir    = process.platform == 'win32' ? '\\\\?\\pipe' : os.tmpdir();
+      const socketPath = path.join(pipeDir, socket_name);
+      const server     = http.createServer();
+
+      server.unref();
+
+      return new Promise((resolve, reject) => {
+        server.on('error', (err) => {
+          if(err.code === 'EADDRINUSE')
+            resolve(false);
+          else
+            reject(err);
+        });
+
+        server.listen(socketPath, resolve.bind(null, server));
+      });
+    }, 1000 * 120, 100);
+
+    return server;
+  }
+
   async download(file_url, file_md5, allowResume) {
     var file_path = this.getFilePathFromMd5(file_md5);
+    var server    = await this.isWritable(`castor_${file_md5}`);
+
+    if(typeof file_url == 'string')
+      file_url = url.parse(file_url);
+
+    file_url.headers        = {...file_url.headers};
+    file_url.followRedirect = true;
 
     try {
       const {size} = fs.statSync(file_path);
-      if(size == 0 && file_md5 != MD5_EMPTY_FILE)
+      if(size == 0 && file_md5 != MD5_EMPTY_FILE) {
         fs.unlinkSync(file_path);
-      else
+      } else {
+        await new Promise((resolve) => server.close(resolve));
         return false;
+      }
     } catch(err) {}
 
     mkdirpSync(path.dirname(file_path));
@@ -142,30 +178,25 @@ class Store {
 
     hash.setEncoding('hex');
 
-    if(fs.existsSync(tmp_path)) {
-      if(allowResume) {
-        current_size = fs.statSync(tmp_path).size;
-
-        await pipe(fs.createReadStream(tmp_path), hash);
-      } else {
-        fs.unlinkSync(file_path)
-      }
-    }
-
     try {
-      if(typeof file_url == 'string')
-        file_url = url.parse(file_url);
+      if(fs.existsSync(tmp_path)) {
+        if(allowResume) {
+          current_size = fs.statSync(tmp_path).size;
 
-      file_url.headers        = {...file_url.headers};
-      file_url.followRedirect = true;
+          await pipe(fs.createReadStream(tmp_path), hash);
+
+          file_url.headers['Range'] = `bytes=${current_size}-`;
+        } else {
+          fs.unlinkSync(tmp_path);
+        }
+      }
 
       var res           = await request(file_url);
       var expected_size = parseInt(res.headers['content-length']);
 
-      allowResume      &= !!res.headers['accept-ranges'];
+      allowResume &= !!res.headers['accept-ranges'];
 
       do {
-
         if(!(res.statusCode >= 200 && res.statusCode < 300))
           throw `Invalid status code '${res.statusCode}'`;
 
@@ -184,7 +215,6 @@ class Store {
 
         await new Promise(resolve => fs.fsync(fd, resolve));
 
-
         let {size} = fs.statSync(tmp_path);
 
         allowResume  &= size != current_size;
@@ -193,10 +223,12 @@ class Store {
         if(current_size == expected_size || !allowResume)
           break;
 
+        //sleep(1 * n); if n > 10 throw; n++
+        //if thunk.size > 0 n = 1
+
         file_url.headers['Range'] = `bytes=${current_size}-`;
 
         res         = await request(file_url);
-
         allowResume &= current_size < expected_size;
       } while(allowResume);
 
@@ -214,11 +246,11 @@ class Store {
       if(fs.existsSync(tmp_path))
         fs.unlinkSync(tmp_path);
       throw err;
+    } finally {
+      await new Promise((resolve) => server.close(resolve));
     }
-
   }
 
 }
-
 
 module.exports = Store;
