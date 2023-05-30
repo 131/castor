@@ -227,7 +227,7 @@ describe("Test Index Class", function() {
       var file_md5  = md5(data);
       var touched = await Promise.all([index.checkFile(file_path, file_url, file_md5), index.checkFile(file_path, file_url, file_md5)]);
 
-      expect(touched).to.eql([1, 0]); // second same download wait until first one is over, si result 0 because it's already downloaded
+      expect(touched).to.eql([1, 0]); // second same download wait until first one is over, result is 0 because it's already downloaded
     });
 
 

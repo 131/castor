@@ -231,7 +231,7 @@ class Store {
 
         file_url.headers['Range'] = `bytes=${current_size}-`;
 
-        await sleep(attempt * 1000);
+        await sleep(Math.min(attempt, 10)  * 1000);
 
         res         = await request(file_url);
         allowResume &= current_size < expected_size;
