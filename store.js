@@ -13,6 +13,7 @@ const mkdirpSync        = require('nyks/fs/mkdirpSync');
 const writeLazySafe = require('nyks/fs/writeLazySafe');
 const eachIteratorLimit = require('nyks/async/eachIteratorLimit');
 const retryUntil = require('nyks/async/retryUntil');
+const sleep      = require('nyks/async/sleep');
 const promisify  = require('nyks/function/promisify');
 const md5File    = promisify(require('nyks/fs/md5File'));
 
@@ -191,6 +192,7 @@ class Store {
         }
       }
 
+      var attempt       = 0;
       var res           = await request(file_url);
       var expected_size = parseInt(res.headers['content-length']);
 
@@ -202,7 +204,6 @@ class Store {
 
         const fd      = fs.openSync(tmp_path, 'a+');
         var outstream = await createWriteStream(tmp_path, {fd});
-
 
         pipe(res, hash, {end : false}).catch(() => false);
 
@@ -217,16 +218,20 @@ class Store {
 
         let {size} = fs.statSync(tmp_path);
 
-        allowResume  &= size != current_size;
+        if(size == current_size)
+          attempt++;
+        else
+          attempt = 0;
+
+        allowResume  &= attempt < 10;
         current_size = size;
 
         if(current_size == expected_size || !allowResume)
           break;
 
-        //sleep(1 * n); if n > 10 throw; n++
-        //if thunk.size > 0 n = 1
-
         file_url.headers['Range'] = `bytes=${current_size}-`;
+
+        await sleep(attempt * 1000);
 
         res         = await request(file_url);
         allowResume &= current_size < expected_size;
