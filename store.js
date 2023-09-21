@@ -184,7 +184,11 @@ class Store {
         if(allowResume) {
           current_size = fs.statSync(tmp_path).size;
 
-          await pipe(fs.createReadStream(tmp_path), hash);
+          let src = fs.createReadStream(tmp_path);
+
+          pipe(src, hash, {end : false}).catch(() => false);
+
+          await new Promise((resolve) => src.once('end', resolve));
 
           file_url.headers['Range'] = `bytes=${current_size}-`;
         } else {
