@@ -119,9 +119,8 @@ class Store {
 
   write() {
     return writeLazySafe(this._index_path, JSON.stringify(this._index), function(err) {
-        if(err)
-          log.error("Silent failure when writing index", err);
-      });
+      if(err)
+        log.error("Silent failure when writing index", err);
     });
   }
 
