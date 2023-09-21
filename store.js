@@ -12,6 +12,7 @@ const set               = require('mout/object/set');
 const mkdirpSync        = require('nyks/fs/mkdirpSync');
 const writeLazySafe = require('nyks/fs/writeLazySafe');
 const eachIteratorLimit = require('nyks/async/eachIteratorLimit');
+const queue      = require('nyks/async/queue');
 const retryUntil = require('nyks/async/retryUntil');
 const sleep      = require('nyks/async/sleep');
 const promisify  = require('nyks/function/promisify');
@@ -40,6 +41,8 @@ const MD5_EMPTY_FILE = 'd41d8cd98f00b204e9800998ecf8427e';
 class Store {
 
   constructor(index_path) {
+    this.write_queue = queue(this._write.bind(this), 1);
+
     this._index_path   = index_path;
     this._storage_path = path.dirname(this._index_path);
     mkdirpSync(this._storage_path);
@@ -118,9 +121,17 @@ class Store {
   }
 
   write() {
-    return writeLazySafe(this._index_path, JSON.stringify(this._index), function(err) {
-      if(err)
-        log.error("Silent failure when writing index", err);
+    this.write_queue.push();
+  }
+
+  _write() {
+    return new Promise((resolve) => {
+      writeLazySafe(this._index_path, JSON.stringify(this._index), function(err) {
+        if(err)
+          log.error("Silent failure when writing index", err);
+
+        resolve();
+      });
     });
   }
 
