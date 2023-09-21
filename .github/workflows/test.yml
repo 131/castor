@@ -10,6 +10,15 @@ jobs:
         node-version: '8.x'
     - run: npm install
     - run: npm test
+  cover:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-node@v2
+      with:
+        node-version: '16.x'
+    - run: npm install --legacy-bundling
+    - run: npm run cover
     - name: Coveralls
       uses: coverallsapp/github-action@master
       with:
