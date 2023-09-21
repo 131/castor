@@ -10,10 +10,6 @@ jobs:
         node-version: '8.x'
     - run: npm install
     - run: npm test
-    - name: Tests
-      uses: coverallsapp/github-action@master
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
   cover:
     runs-on: ubuntu-latest
     steps:
