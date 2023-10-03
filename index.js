@@ -6,6 +6,7 @@ const send = require('send');
 const url  = require('url');
 
 const md5  = require('nyks/crypto/md5');
+const mkdirpSync        = require('nyks/fs/mkdirpSync');
 
 
 class Index {
@@ -20,6 +21,22 @@ class Index {
     file_path = file_path.replace(/^\/?\.?\//, ""); // cleanup leading '/', './', '/./'
     file_path = file_path.replace(/\/\.\/|\/\//g, "/"); // replace '/./' by '/'
     return md5(file_path);
+  }
+
+  // return if index has been touched (new file)
+  writeBuffer(file_name, body) {
+    let file_md5 = md5(body);
+    let file_path = this.store.getFilePathFromMd5(file_md5);
+    let exists = this.checkEntry(file_name, file_md5);
+    if(exists)
+      return false;
+
+    mkdirpSync(path.dirname(file_path));
+    let tmp = file_path + ".tmp";
+    fs.writeFileSync(tmp, body);
+    fs.renameSync(tmp, file_path);
+
+    return this._update(file_name, file_md5);
   }
 
   get(file_name) {
