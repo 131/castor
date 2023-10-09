@@ -79,6 +79,61 @@ class Store {
   }
 
 
+  async checkIntegrity(progress = null) {
+    let files_size = 0;
+
+    if(progress) {
+      // compute file_size for progress only
+      for await(const file_path of readdir(this._storage_path)) {
+        let {size} = fs.statSync(file_path);
+        files_size += size;
+      }
+    }
+
+    if(this._index.version)
+      return;
+
+    let stats = {
+      total_size : 0,
+      total_nb : 0,
+      valid_nb : 0,
+      valid_size : 0,
+      corrupted_size : 0,
+      corrupted_nb : 0,
+      corrupted_list : [],
+    };
+
+    await eachIteratorLimit(readdir(this._storage_path), 2, async (file_path) => {
+      let {size : file_size} = fs.statSync(file_path);
+
+      if(file_path == this._index_path)
+        return;
+
+      stats.total_nb++;
+      stats.total_size += file_size;
+
+      if(progress)
+        progress.update(stats.total_size / files_size, {file_path : file_path.substr(0, 20)});
+
+      let target_hash = path.basename(file_path);
+
+      var file_md5 = await md5File(file_path);
+      if(file_md5 != target_hash) {
+        stats.corrupted_size += file_size;
+        stats.corrupted_nb++;
+        stats.corrupted_list.push(file_path);
+      } else {
+        stats.valid_size += file_size;
+        stats.valid_nb++;
+      }
+    });
+
+    if(progress)
+      progress.terminate();
+
+    return stats;
+  }
+
   async warmup() {
     if(this._index.version)
       return;
