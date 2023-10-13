@@ -115,7 +115,7 @@ class Store {
       stats.total_size += file_size;
 
       if(progress)
-        progress.update(stats.total_size / files_size, {file_path : file_path.substr(0, 20)});
+        progress.update(stats.total_size / files_size, {file_name : path.basename(file_path).substr(0, 20)});
 
       let target_hash = path.basename(file_path);
 
