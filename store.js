@@ -90,8 +90,6 @@ class Store {
       }
     }
 
-    if(this._index.version)
-      return;
 
     let stats = {
       total_size : 0,
@@ -102,6 +100,10 @@ class Store {
       corrupted_nb : 0,
       corrupted_list : [],
     };
+
+
+    if(this._index.version)
+      return stats;
 
     await eachIteratorLimit(readdir(this._storage_path), 2, async (file_path) => {
       let {size : file_size} = fs.statSync(file_path);
@@ -128,8 +130,9 @@ class Store {
       }
     });
 
+
     if(progress)
-      progress.terminate();
+      await progress.terminate();
 
     return stats;
   }
