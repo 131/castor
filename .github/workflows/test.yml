@@ -1,4 +1,4 @@
-name: tests
+name: "Tests and deploy"
 on: [push]
 jobs:
   test_v8:
@@ -32,3 +32,19 @@ jobs:
       uses: coverallsapp/github-action@master
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
+
+  publish:
+    if: github.event_name == 'create' && github.event.ref_type == 'tag' && startsWith(github.event.ref, 'v')
+    needs: [test_v8, test_vlast, cover]
+    environment: production
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-node@v2
+      with:
+        node-version: '8.x'
+        registry-url: 'https://registry.npmjs.org'
+    - run: npm install --legacy-bundling
+    - run: npm publish
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
