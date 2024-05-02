@@ -1,7 +1,7 @@
 name: tests
 on: [push]
 jobs:
-  mocha:
+  test_v8:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -10,7 +10,7 @@ jobs:
         node-version: '8.x'
     - run: npm install --legacy-bundling
     - run: npm run mocha
-  eslint:
+  test_vlast:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -18,7 +18,7 @@ jobs:
       with:
         node-version: '16.x'
     - run: npm install --legacy-bundling
-    - run: npm run eslint
+    - run: npm run test
   cover:
     runs-on: ubuntu-latest
     steps:
