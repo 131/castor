@@ -84,8 +84,8 @@ class Store {
 
     if(progress) {
       // compute file_size for progress only
-      for await(const file_path of readdir(this._storage_path)) {
-        let {size} = fs.statSync(file_path);
+      for(const file_path of readdir(this._storage_path)) {
+        let {size} = await fs.statSync(file_path);
         files_size += size;
       }
     }
