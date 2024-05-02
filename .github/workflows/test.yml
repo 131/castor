@@ -1,7 +1,16 @@
 name: tests
 on: [push]
 jobs:
-  tests:
+  mocha:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-node@v2
+      with:
+        node-version: '8.x'
+    - run: npm install --legacy-bundling
+    - run: npm run mocha
+  eslint:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -9,14 +18,14 @@ jobs:
       with:
         node-version: '16.x'
     - run: npm install --legacy-bundling
-    - run: npm test
+    - run: npm run eslint
   cover:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
     - uses: actions/setup-node@v2
       with:
-        node-version: '8.x'
+        node-version: '16.x'
     - run: npm install --legacy-bundling
     - run: npm run cover
     - name: Coveralls
