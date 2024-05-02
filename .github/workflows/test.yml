@@ -34,7 +34,7 @@ jobs:
         github-token: ${{ secrets.GITHUB_TOKEN }}
 
   publish:
-    if: github.event.ref_type == 'tag' && startsWith(github.event.ref, 'v')
+    if: startsWith(github.event.ref, 'refs/tags/v')
     needs: [test_v8, test_vlast, cover]
     environment: production
     runs-on: ubuntu-latest
